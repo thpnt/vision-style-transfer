@@ -1,0 +1,21 @@
+pandas == 2.2.3
+numpy == 1.23.5
+matplotlib == 3.9.2
+seaborn == 0.13.2
+tensorflow-macos
+tensorflow-metal
+streamlit == 1.40.1
+python-dotenv == 1.0.1
+scikit-learn == 1.5.2
+google-api-core  == 2.23.0
+google-auth == 2.36.0
+google-auth-oauthlib == 1.0.0
+google-cloud == 0.34.0
+google-cloud-core == 2.4.1
+google-cloud-storage
+Pillow
+opencv-python
+requests
+jupyter
+tqdm
+scikit-image
