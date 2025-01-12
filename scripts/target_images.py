@@ -16,7 +16,8 @@ import os, sys, argparse, json
 import numpy as np
 import tensorflow as tf
 from PIL import Image
-from tqdm import tqdm
+from tqdm import tqdm   
+import gc
 
 # Path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -109,6 +110,8 @@ with tqdm(total=total_iterations, desc="Processing", unit="iteration") as pbar:
             generated_image = np.uint8(generated_image.numpy()[0] * 255)
             generated_image_pil = Image.fromarray(generated_image)
             generated_image_pil.save(os.path.join(args.output_folder, f"transformed_{i}.jpg"))
+            del model, generated_image, generated_image_pil, content_image
+            gc.collect()
 
         except Exception as e:
             if content_images[i] not in logs["content_images"].keys():
