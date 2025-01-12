@@ -1,0 +1,5 @@
+{"weights": {"content": 1, "style": 1000.0, "tv": 0.0001}, 
+"n_epochs": 150, 
+"learning_rate": 0.003, 
+"image_size": 256,
+"batch_size": 4}
