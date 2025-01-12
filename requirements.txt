@@ -4,6 +4,8 @@ matplotlib == 3.9.2
 seaborn == 0.13.2
 tensorflow-macos
 tensorflow-metal
+tf-keras==2.16
+tensorflow-hub
 streamlit == 1.40.1
 python-dotenv == 1.0.1
 scikit-learn == 1.5.2
@@ -19,3 +21,5 @@ requests
 jupyter
 tqdm
 scikit-image
+pycocotools
+kaggle
