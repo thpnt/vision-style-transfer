@@ -139,7 +139,7 @@ class StyleTransferModel(tf.keras.Model):
         return loss
     
 
-    def fit(self, content_image, style_image, weights, n_epochs=1001, version='test', save=True, display=True):
+    def fit(self, content_image, style_image, weights, n_epochs=1001, version='test', save=True, display=True, verbose=20):
         content_activations, _ = self.get_activations(content_image, self.feature_extractor)
         _, style_activations = self.get_activations(style_image, self.feature_extractor)
         target_image = tf.Variable(content_image)
@@ -148,7 +148,7 @@ class StyleTransferModel(tf.keras.Model):
             loss = self.train_step(target_image, content_activations, style_activations, weights)
             target_image.assign(tf.clip_by_value(target_image, 0., 1.))
             
-            if epoch % 50 == 0:
+            if epoch % verbose == 0:
                 # Save image
                 if save:
                     self.save_image(target_image, epoch, method="optimization_method", version=version)

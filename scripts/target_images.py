@@ -38,7 +38,7 @@ parser.add_argument('--content_folder', default=os.path.join(data_path, "coco201
 parser.add_argument('--output_folder', default=os.path.join(data_path, "coco2017/target_images"),
                     help="Folder to save the target images.")
 parser.add_argument('--style', default="starry_night", help='Name of style image (eg: starry_night).')
-parser.add_argument('--image_size', default=hyperparameters['image_size'], type=int, help='Size of the images.')
+parser.add_argument('--image_size', default=hyperparameters["starry_night"]['image_size'], type=int, help='Size of the images.')
 parser.add_argument('--bottom_image_id', default=0, type=int, help='id of first image of the batch')
 parser.add_argument('--top_image_id', default=1000, type=int, help='id of last image of the batch')
 
@@ -98,12 +98,12 @@ with tqdm(total=total_iterations, desc="Processing", unit="iteration") as pbar:
             continue
         
         # Instantiate model
-        model = StyleTransferModel(feature_extractor=feature_extractor, target_size=target_size, learning_rate=hyperparameters["learning_rate"])
+        model = StyleTransferModel(feature_extractor=feature_extractor, target_size=target_size, learning_rate=hyperparameters["starry_night"]["learning_rate"])
 
         # Fit
         try:
-            generated_image = model.fit(content_image, style_image, hyperparameters["weights"], 
-                                        n_epochs=hyperparameters["n_epochs"], 
+            generated_image = model.fit(content_image, style_image, hyperparameters["starry_night"]["weights"], 
+                                        n_epochs=hyperparameters["starry_night"]["n_epochs"], 
                                         version=f"target_images_{i}", save=False, display=False)
             # Save generated image to output folder
 
