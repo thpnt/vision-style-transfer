@@ -111,6 +111,7 @@ with tqdm(total=total_iterations, desc="Processing", unit="iteration") as pbar:
             generated_image_pil = Image.fromarray(generated_image)
             generated_image_pil.save(os.path.join(args.output_folder, f"transformed_{i}.jpg"))
             del model, generated_image, generated_image_pil, content_image
+            tf.keras.backend.clear_session()
             gc.collect()
 
         except Exception as e:
