@@ -1,8 +1,7 @@
-import os, sys
+import os, sys, json
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-from PIL import Image
 from IPython.display import clear_output
 
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -19,7 +18,8 @@ WEIGHTS = {
     "style": 1e5,
     "tv": 1e-6
 } 
-    
+
+# Feature extractor functions
 def get_vgg(input_shape):
     vgg = tf.keras.applications.VGG16(include_top=False, weights="imagenet", input_shape=input_shape + (3,))
     for layer in vgg.layers:
@@ -30,25 +30,28 @@ def get_feature_extractor(vgg, layer_names=CONTENT_LAYERS + STYLE_LAYERS):
     outputs = [vgg.get_layer(name).output for name in layer_names]
     return tf.keras.Model(inputs=vgg.input, outputs=outputs)
 
+feature_extractor = get_feature_extractor(get_vgg(TARGET_SIZE), CONTENT_LAYERS + STYLE_LAYERS)
+
+def get_activations(image, feature_extractor=feature_extractor):
+    preprocessed_image = tf.keras.applications.vgg16.preprocess_input(image * 255) # Useful for VGG
+    # Get activations
+    activations = feature_extractor(preprocessed_image)
+    content_activations = activations[:len(CONTENT_LAYERS)]
+    style_activations = activations[len(CONTENT_LAYERS):]
+    del activations
+    return content_activations, style_activations
+
 
 # Model
 class StyleTransferModel(tf.keras.Model):
-    def __init__(self, feature_extractor, target_size=TARGET_SIZE, learning_rate=1e-3, 
+    def __init__(self, get_activations=get_activations, target_size=TARGET_SIZE, learning_rate=1e-3, 
                  content_layers=CONTENT_LAYERS, style_layers=STYLE_LAYERS):
         super().__init__()
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-        self.feature_extractor = feature_extractor
+        self.get_activations = get_activations
         self.content_layers = content_layers
         self.style_layers = style_layers
-
-    def get_activations(self, image, feature_extractor):
-        preprocessed_image = tf.keras.applications.vgg16.preprocess_input(image * 255) # Useful for VGG
-        # Get activations
-        activations = feature_extractor(preprocessed_image)
-        content_activations = activations[:len(self.content_layers)]
-        style_activations = activations[len(self.content_layers):]
-        del activations
-        return content_activations, style_activations
+        self.target_size = target_size
 
     @staticmethod
     def content_loss(content_activation, target_activation):
@@ -129,7 +132,7 @@ class StyleTransferModel(tf.keras.Model):
     @tf.function
     def train_step(self, target_image, content_activations, style_activations, weights):
         with tf.GradientTape() as tape:
-            target_content, target_style = self.get_activations(target_image, self.feature_extractor)
+            target_content, target_style = self.get_activations(target_image)
             c_loss = self.content_loss(content_activations, target_content)
             s_loss = self.style_loss(style_activations, target_style)
             tv_loss = self.variation_loss(target_image)
@@ -140,8 +143,8 @@ class StyleTransferModel(tf.keras.Model):
     
 
     def fit(self, content_image, style_image, weights, n_epochs=1001, version='test', save=True, display=True, verbose=20):
-        content_activations, _ = self.get_activations(content_image, self.feature_extractor)
-        _, style_activations = self.get_activations(style_image, self.feature_extractor)
+        content_activations, _ = self.get_activations(content_image)
+        _, style_activations = self.get_activations(style_image)
         target_image = tf.Variable(content_image)
 
         for epoch in range(n_epochs+1):
@@ -159,3 +162,30 @@ class StyleTransferModel(tf.keras.Model):
                     self.display_image(target_image, title=f"Epoch {epoch}")
                 
         return target_image
+    
+
+# Instantiate model
+hyperparams = json.load(open(os.path.join(project_root, "models/hyperparameters.json"), "r"))
+
+def build_style_transfer_model(style="mosaic"):
+    return StyleTransferModel(get_activations=get_activations, target_size=TARGET_SIZE, learning_rate=hyperparams[style]['learning_rate'])
+
+model = build_style_transfer_model()
+
+def transform(images, style_image, hyperparams=hyperparams, style='mosaic'):
+    output = []  # Use a list to store transformed images
+    for i in range(images.shape[0]):
+        # Process each image independently
+        transformed = model.fit(
+            tf.expand_dims(images[i], axis=0),  # Add batch dimension
+            style_image,
+            hyperparams[style]["weights"],
+            n_epochs=hyperparams[style]["n_epochs"],
+            save=False,
+            display=False
+        )
+        # Append the transformed image to the output list
+        output.append(tf.squeeze(transformed, axis=0))  # Remove batch dimension
+    
+    # Convert the output list to a tensor
+    return tf.stack(output, axis=0)
