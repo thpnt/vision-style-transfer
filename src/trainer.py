@@ -117,15 +117,19 @@ class TransformerNetTrainer:
                     if (i+1) % self.carefulness == 0:
                         self.transformer_net.save_weights(f"{project_root}/models/transformer_net/batch_{i + 1}.weights.h5")
                         
+                        # Save batch losses for the given epoch
+                        with open(f"{project_root}/models/epoch_batch_loss.json", "w") as batch_loss_file:
+                            json.dump({"epoch": epoch + 1, "batch_losses": self.batch_losses}, batch_loss_file)
+                        
                     pbar.set_postfix({"loss": batch_loss})
                     pbar.update(1)
 
-            # Save model weights and epoch losses at the end of each epoch
+            # Save model weights
+            self.transformer_net.save_weights(f"{project_root}/models/transformer_net/epoch_{epoch + 1}.weights.h5")
+            
+            # save loss and memory usage
             avg_epoch_loss = epoch_loss / steps_per_epoch
             self.epoch_losses.append(avg_epoch_loss)  # Track epoch loss
-
-            # Save losses and memory usage alongside model weights
-            with open(f"{project_root}/models/loss_memory_{epoch + 1}.json", "w") as loss_file:
+            
+            with open(f"{project_root}/models/loss_memory.json", "w") as loss_file:
                 json.dump({"epoch_losses": self.epoch_losses, "batch_losses": self.batch_losses, "memory_usage": self.memory_usage}, loss_file)
-
-            self.transformer_net.save_weights(f"{project_root}/models/transformer_net/epoch_{epoch + 1}.weights.h5")
