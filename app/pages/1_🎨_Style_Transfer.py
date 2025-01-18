@@ -64,7 +64,7 @@ if "content_image" in st.session_state and st.session_state["content_image"] is 
 # Check if styled_image exists in session state
 if "styled_image" in st.session_state and st.session_state["styled_image"] is not None:
     st.write("## Your Styled Image.")
-    st.image(st.session_state["styled_image"], width=512)
+    st.image(st.session_state["styled_image"], width=256)
 
 
 # Test API call
@@ -92,7 +92,7 @@ if st.button("Apply Style Transfer"):
                     st.session_state["styled_image"] = styled_image
 
                     st.write("## Your Styled Image.")
-                    st.image(styled_image, width=512)
+                    st.image(styled_image, width=256)
 
                     # Force rerun to display download button
                     st.rerun()

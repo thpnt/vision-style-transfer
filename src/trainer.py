@@ -10,7 +10,7 @@ sys.path.append(project_root)
 
 from src.transformer_net import TransformerNet, content_loss, style_loss, variation_loss, total_loss
 from src.neural_optimization import get_activations, transform
-from utils.images_utils import load_image
+from utils.images_utils import load_image, save_tensor_to_image
 
 # Load hyperparameters
 hyperparams = json.load(open(os.path.join(project_root, "models/hyperparameters.json"), "r"))
@@ -26,7 +26,7 @@ class TransformerNetTrainer:
     def __init__(self, transformer_net=TransformerNet(), style_image=style_image, dataset_path=dataset_path, batch_size=4, 
                  get_activations=get_activations, train_transform=transform, hyperparams=hyperparams,
                  content_loss=content_loss, style_loss=style_loss, variation_loss=variation_loss, total_loss=total_loss,
-                 style="mosaic", carefulness=5, target_size=(256, 256)):
+                 style="mosaic", carefulness=5, target_size=(256, 256), dataset_ratio=1.0):
         self.transformer_net = transformer_net
         self.train_transform = train_transform
         self.get_activations = get_activations
@@ -43,7 +43,9 @@ class TransformerNetTrainer:
         self.total_loss = total_loss
         self.target_size = target_size
         self.style_image = style_image
+        self.style = style
         self.memory_usage = [] # List to track memory usage
+        self.dataset_ratio = dataset_ratio
         
         # Build the model explicitly if not already built
         if not self.transformer_net.built:
@@ -55,9 +57,23 @@ class TransformerNetTrainer:
         self.memory_usage.append(memory)
     
     
-    def train_step(self, batch):
-        # Compute target images using the style transfer model
-        target_images = self.train_transform(batch, self.style_image)
+    def train_step(self, batch, current_epoch, current_batch, batch_names):
+        
+        # if epoch is 0, compute and save the target images
+        if current_epoch == 0:
+            # Compute target images using the style transfer model
+            target_images = self.train_transform(batch, self.style_image, style=self.style)
+            for i, target_image in enumerate(target_images):
+                input_image_name = os.path.basename(batch_names[i]).split("/")[-1]
+                save_tensor_to_image(target_image, 
+                                     f"{project_root}/data/coco2017/target_images/{self.style}/{input_image_name}", 
+                                     clip_range=(0, 1))
+        else: # Load target images
+            image_name = [os.path.basename(image) for image in batch_names]
+            target_list = [f"{project_root}/data/coco2017/target_images/{self.style}/{image}" for image in image_name]
+            target_images = [load_image(image_path, target_size=self.target_size) for image_path in target_list]
+            target_images = tf.concat(target_images, axis=0)
+        
         
         # Compute activations for target
         target_content, target_style = self.get_activations(target_images)
@@ -84,7 +100,7 @@ class TransformerNetTrainer:
         return loss
 
     def train(self, epochs):
-        dataset_size = len(os.listdir(self.dataset))
+        dataset_size = len(os.listdir(self.dataset)) * self.dataset_ratio
         steps_per_epoch = dataset_size // self.batch_size
 
         for epoch in tqdm(range(epochs), desc="Epochs", unit="epoch"):
@@ -99,7 +115,7 @@ class TransformerNetTrainer:
                     batch = tf.concat(batch, axis=0)
 
                     # Train
-                    loss = self.train_step(batch)
+                    loss = self.train_step(batch, epoch, i, batch_list)
 
                     # Track batch loss
                     batch_loss = float(loss.numpy())
@@ -115,21 +131,21 @@ class TransformerNetTrainer:
 
                     # Intermediate save
                     if (i+1) % self.carefulness == 0:
-                        self.transformer_net.save_weights(f"{project_root}/models/transformer_net/batch_{i + 1}.weights.h5")
+                        self.transformer_net.save_weights(f"{project_root}/models/transformer_net/{self.style}/batch_{i + 1}.weights.h5")
                         
                         # Save batch losses for the given epoch
-                        with open(f"{project_root}/models/epoch_batch_loss.json", "w") as batch_loss_file:
+                        with open(f"{project_root}/models/{self.style}/epoch_batch_loss.json", "w") as batch_loss_file:
                             json.dump({"epoch": epoch + 1, "batch_losses": self.batch_losses}, batch_loss_file)
                         
                     pbar.set_postfix({"loss": batch_loss})
                     pbar.update(1)
 
             # Save model weights
-            self.transformer_net.save_weights(f"{project_root}/models/transformer_net/epoch_{epoch + 1}.weights.h5")
+            self.transformer_net.save_weights(f"{project_root}/models/transformer_net/{self.style}/epoch_{epoch + 1}.weights.h5")
             
             # save loss and memory usage
             avg_epoch_loss = epoch_loss / steps_per_epoch
             self.epoch_losses.append(avg_epoch_loss)  # Track epoch loss
             
-            with open(f"{project_root}/models/loss_memory.json", "w") as loss_file:
+            with open(f"{project_root}/models/{self.style}/loss_memory.json", "w") as loss_file:
                 json.dump({"epoch_losses": self.epoch_losses, "batch_losses": self.batch_losses, "memory_usage": self.memory_usage}, loss_file)

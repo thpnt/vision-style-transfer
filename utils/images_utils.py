@@ -54,3 +54,28 @@ def display_image(image_tensor, title="Image", clip_range=(0, 1)):
     plt.axis('off')
     plt.title(title)
     plt.show()
+    
+    
+# Save a tensor as an image
+def save_tensor_to_image(tensor, file_path, clip_range=(0,1)):
+    """
+    Save a tensor as an image file.
+    
+    Args:
+        tensor (tf.Tensor): Image tensor with shape (height, width, channels).
+        file_path (str): File path to save the image.
+        clip_range: (0, 1) or (0, 255)
+    """
+    # Remove the batch dimension and clip pixel values
+    image = tensor.numpy()  # Shape: (height, width, channels)
+    image = np.clip(image, clip_range[0], clip_range[1])
+    if clip_range==(0, 255):
+        image = image.astype(np.uint8)
+    
+    # Convert the pixel values to the range [0, 255]
+    if clip_range==(0, 1):
+        image = (image * 255).astype(np.uint8)
+    
+    # Save the image
+    image = Image.fromarray(image)
+    image.save(file_path)

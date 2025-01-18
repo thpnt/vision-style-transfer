@@ -11,7 +11,7 @@ sys.path.append(project_root)
 # Model
 transformer_net = TransformerNet()
 transformer_net.build(input_shape=(None, 256, 256, 3))
-transformer_net.load_weights(project_root + '/models/transformer_net/epoch_2.weights.h5')
+transformer_net.load_weights(project_root + '/models/transformer_net/mosaic/epoch_2.weights.h5')
 
 # Router
 router = APIRouter()
