@@ -17,13 +17,15 @@ if __name__ == "__main__":
     
     # Argument parser
     parser = argparse.ArgumentParser(description="Train the TransformerNet model") 
-    parser.add_argument("--dataset_path", type=str, default=os.path.join(project_root, "data/train_test/"), help="Path to the dataset of content images")
+    parser.add_argument("--dataset_path", type=str, default=os.path.join(project_root, "data/coco2017/raw_images/"), help="Path to the dataset of content images")
     parser.add_argument("--style_image_path", type=str, default=os.path.join(project_root, "data/style/mosaic.jpg"), help="Path to the style image")
     parser.add_argument("--batch_size", type=int, default=4, help="Batch size for training")
     parser.add_argument("--epochs", type=int, default=2, help="Number of epochs to train the model")
     parser.add_argument("--image_size", type=int, default=256, help="Size of the images to be used for training")
     parser.add_argument("--carefulness", type=int, default=5, help="Carefulness parameter for the style loss. Lower values result in saving more often.")
     parser.add_argument("--hyperparameters_path", type=str, default=os.path.join(project_root, "models/hyperparameters.json"), help="Path to the hyperparameters file")
+    parser.add_argument("--style", type=str, default="starry_night", help="Style to be used for training")
+    parser.add_argument("--dataset_ratio", type=float, default=1.0, help="Ratio of the dataset to be used for training")
     args = parser.parse_args()
     
     
@@ -41,7 +43,9 @@ if __name__ == "__main__":
                                     dataset_path=args.dataset_path, 
                                     batch_size=args.batch_size, 
                                     target_size=(args.image_size, args.image_size), 
-                                    carefulness=args.carefulness)
+                                    carefulness=args.carefulness,
+                                    style=args.style,
+                                    dataset_ratio=args.dataset_ratio,)
 
     print("Training the model...")
     # Train the model
