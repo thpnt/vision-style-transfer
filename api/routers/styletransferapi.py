@@ -5,6 +5,7 @@ from io import BytesIO
 from PIL import Image
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from app.components.images import preprocess_image, postprocess_image, encode_base64
+from utils.super_resolution import super_resolution
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
                 
@@ -23,6 +24,7 @@ def style_transfer(content_image: UploadFile = File(...), style_image: UploadFil
     style_tensor = preprocess_image(style_image.file)
     try:
         output_tensor = transform(content_tensor, style_tensor)
+        output_tensor = tf.clip_by_value(super_resolution(output_tensor) / 255.0, 0, 1)
         output_image = postprocess_image(output_tensor)
         output_image = encode_base64(output_image)
         

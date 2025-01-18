@@ -172,7 +172,7 @@ def build_style_transfer_model(style="mosaic"):
 
 model = build_style_transfer_model()
 
-def transform(images, style_image, hyperparams=hyperparams, style='mosaic'):
+def transform(images, style_image, hyperparams=hyperparams, style='default'):
     output = []  # Use a list to store transformed images
     for i in range(images.shape[0]):
         # Process each image independently
