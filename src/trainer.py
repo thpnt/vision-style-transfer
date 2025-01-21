@@ -32,7 +32,8 @@ class TransformerNetTrainer:
         self.get_activations = get_activations
         self.dataset = dataset_path
         self.batch_size = batch_size
-        self.optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
+        self.style = style
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=hyperparams[style]["learning_rate"])
         self.weights = hyperparams[style]["weights"]
         self.carefulness = carefulness
         self.epoch_losses = []  # List to track epoch losses
@@ -43,7 +44,6 @@ class TransformerNetTrainer:
         self.total_loss = total_loss
         self.target_size = target_size
         self.style_image = style_image
-        self.style = style
         self.memory_usage = [] # List to track memory usage
         self.dataset_ratio = dataset_ratio
         
@@ -57,7 +57,7 @@ class TransformerNetTrainer:
         self.memory_usage.append(memory)
     
     
-    def train_step(self, batch, current_epoch, current_batch, batch_names):
+    def train_step(self, batch, current_epoch, batch_names):
         
         # if epoch is 0, compute and save the target images
         if current_epoch == 0:
@@ -100,8 +100,8 @@ class TransformerNetTrainer:
         return loss
 
     def train(self, epochs):
-        dataset_size = len(os.listdir(self.dataset)) * self.dataset_ratio
-        steps_per_epoch = dataset_size // self.batch_size
+        dataset_size = int(len(os.listdir(self.dataset)) * self.dataset_ratio)
+        steps_per_epoch = int(dataset_size // self.batch_size)
 
         for epoch in tqdm(range(epochs), desc="Epochs", unit="epoch"):
             epoch_loss = 0.0
@@ -115,7 +115,7 @@ class TransformerNetTrainer:
                     batch = tf.concat(batch, axis=0)
 
                     # Train
-                    loss = self.train_step(batch, epoch, i, batch_list)
+                    loss = self.train_step(batch, epoch, batch_list)
 
                     # Track batch loss
                     batch_loss = float(loss.numpy())
@@ -134,7 +134,7 @@ class TransformerNetTrainer:
                         self.transformer_net.save_weights(f"{project_root}/models/transformer_net/{self.style}/batch_{i + 1}.weights.h5")
                         
                         # Save batch losses for the given epoch
-                        with open(f"{project_root}/models/{self.style}/epoch_batch_loss.json", "w") as batch_loss_file:
+                        with open(f"{project_root}/models/transformer_net/{self.style}/epoch_batch_loss.json", "w") as batch_loss_file:
                             json.dump({"epoch": epoch + 1, "batch_losses": self.batch_losses}, batch_loss_file)
                         
                     pbar.set_postfix({"loss": batch_loss})
@@ -147,5 +147,5 @@ class TransformerNetTrainer:
             avg_epoch_loss = epoch_loss / steps_per_epoch
             self.epoch_losses.append(avg_epoch_loss)  # Track epoch loss
             
-            with open(f"{project_root}/models/{self.style}/loss_memory.json", "w") as loss_file:
+            with open(f"{project_root}/models/transformer_net/{self.style}/loss_memory.json", "w") as loss_file:
                 json.dump({"epoch_losses": self.epoch_losses, "batch_losses": self.batch_losses, "memory_usage": self.memory_usage}, loss_file)
