@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     # Instantiate the TransformerNet and StyleTransferModel
     transformer_net = TransformerNet()
-    transformer_net.build(input_shape=(None, 256, 256, 3))
+    transformer_net.build(input_shape=(None, args.image_size, args.image_size, 3))
 
     # Initialize the trainer
     trainer = TransformerNetTrainer(transformer_net=transformer_net,

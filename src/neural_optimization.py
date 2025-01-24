@@ -2,15 +2,19 @@ import os, sys, json
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
+from dotenv import load_dotenv
 from IPython.display import clear_output
 
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Add path to the project root for importing custom modules
 if project_root not in sys.path:
     sys.path.append(project_root)
+
+# Env
+load_dotenv(dotenv_path=os.path.join(project_root, ".env"))
     
 # Constants 
-TARGET_SIZE = (256, 256)
+TARGET_SIZE = os.getenv("TARGET_SIZE", (256, 256))
 CONTENT_LAYERS = ["block4_conv2"]
 STYLE_LAYERS = ["block1_conv1", "block2_conv1", "block3_conv1", "block4_conv1"]
 WEIGHTS = {
@@ -167,12 +171,12 @@ class StyleTransferModel(tf.keras.Model):
 # Instantiate model
 hyperparams = json.load(open(os.path.join(project_root, "models/hyperparameters.json"), "r"))
 
-def build_style_transfer_model(style="mosaic"):
-    return StyleTransferModel(get_activations=get_activations, target_size=TARGET_SIZE, learning_rate=hyperparams[style]['learning_rate'])
+def build_style_transfer_model(style="mosaic", target_size=TARGET_SIZE):
+    return StyleTransferModel(get_activations=get_activations, target_size=target_size, learning_rate=hyperparams[style]['learning_rate'])
 
 model = build_style_transfer_model()
 
-def transform(images, style_image, hyperparams=hyperparams, style='default'):
+def transform(images, style_image, hyperparams=hyperparams, style='default', model=model):
     output = []  # Use a list to store transformed images
     for i in range(images.shape[0]):
         # Process each image independently

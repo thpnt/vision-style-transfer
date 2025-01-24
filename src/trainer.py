@@ -9,7 +9,7 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(project_root)
 
 from src.transformer_net import TransformerNet, content_loss, style_loss, variation_loss, total_loss
-from src.neural_optimization import get_activations, transform
+from src.neural_optimization import get_activations, transform, build_style_transfer_model
 from utils.images_utils import load_image, save_tensor_to_image
 
 # Load hyperparameters
@@ -22,13 +22,15 @@ dataset_path = os.path.join(project_root, "data/train_test/")
 style_image = load_image(os.path.join(project_root, "data/style/mosaic.jpg"), target_size=(256, 256))
 
 
+
+
+
 class TransformerNetTrainer:
     def __init__(self, transformer_net=TransformerNet(), style_image=style_image, dataset_path=dataset_path, batch_size=4, 
                  get_activations=get_activations, train_transform=transform, hyperparams=hyperparams,
                  content_loss=content_loss, style_loss=style_loss, variation_loss=variation_loss, total_loss=total_loss,
                  style="mosaic", carefulness=5, target_size=(256, 256), dataset_ratio=1.0):
         self.transformer_net = transformer_net
-        self.train_transform = train_transform
         self.get_activations = get_activations
         self.dataset = dataset_path
         self.batch_size = batch_size
@@ -46,6 +48,10 @@ class TransformerNetTrainer:
         self.style_image = style_image
         self.memory_usage = [] # List to track memory usage
         self.dataset_ratio = dataset_ratio
+        
+        # Style transfer model
+        self.style_transfer_model = build_style_transfer_model(style=style, target_size=target_size)
+        self.train_transform = train_transform(model=self.style_transfer_model)
         
         # Build the model explicitly if not already built
         if not self.transformer_net.built:
