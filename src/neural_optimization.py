@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
+import ast
 from IPython.display import clear_output
 
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -14,7 +15,7 @@ if project_root not in sys.path:
 load_dotenv(dotenv_path=os.path.join(project_root, ".env"))
     
 # Constants 
-TARGET_SIZE = os.getenv("TARGET_SIZE", (256, 256))
+TARGET_SIZE = ast.literal_eval(os.getenv("TARGET_SIZE", (256, 256)))
 CONTENT_LAYERS = ["block4_conv2"]
 STYLE_LAYERS = ["block1_conv1", "block2_conv1", "block3_conv1", "block4_conv1"]
 WEIGHTS = {
