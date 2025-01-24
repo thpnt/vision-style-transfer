@@ -1,11 +1,7 @@
 import os, sys
 import tensorflow as tf
-import numpy as np
-from io import BytesIO
-from PIL import Image
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from app.components.images import preprocess_image, postprocess_image, encode_base64
-from utils.super_resolution import super_resolution
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
                 
