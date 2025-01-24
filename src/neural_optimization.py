@@ -113,7 +113,7 @@ class StyleTransferModel(tf.keras.Model):
         image = tf.image.convert_image_dtype(image, tf.uint8)
 
         # Define the directory and ensure it exists
-        save_dir = os.path.join(project_root, f"results/style_transfer/{method}/{version}")
+        save_dir = os.path.join(project_root, "data/gif/")
         os.makedirs(save_dir, exist_ok=True)  # Create the directory if it doesn't exist
 
         # Construct file path
@@ -177,7 +177,7 @@ def build_style_transfer_model(style="mosaic", target_size=TARGET_SIZE):
 
 model = build_style_transfer_model()
 
-def transform(images, style_image, hyperparams=hyperparams, style='default', model=model):
+def transform(images, style_image, hyperparams=hyperparams, style='default', model=model, display=False, save=False):
     output = []  # Use a list to store transformed images
     for i in range(images.shape[0]):
         # Process each image independently
@@ -186,8 +186,8 @@ def transform(images, style_image, hyperparams=hyperparams, style='default', mod
             style_image,
             hyperparams[style]["weights"],
             n_epochs=hyperparams[style]["n_epochs"],
-            save=False,
-            display=False
+            save=save,
+            display=display,
         )
         # Append the transformed image to the output list
         output.append(tf.squeeze(transformed, axis=0))  # Remove batch dimension

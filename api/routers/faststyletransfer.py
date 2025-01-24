@@ -1,5 +1,4 @@
 import os, sys
-import tensorflow as tf
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from app.components.images import preprocess_image, postprocess_image, encode_base64
 from src.transformer_net import TransformerNet
@@ -11,7 +10,7 @@ sys.path.append(project_root)
 # Model
 transformer_net = TransformerNet()
 transformer_net.build(input_shape=(None, 256, 256, 3))
-transformer_net.load_weights(project_root + '/models/transformer_net/mosaic/model.weights.h5')
+transformer_net.load_weights(project_root + '/models/transformer_net/mosaic_model.weights.h5')
 
 # Router
 router = APIRouter()
