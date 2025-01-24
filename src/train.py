@@ -9,6 +9,7 @@ sys.path.append(project_root)
 from src.trainer import TransformerNetTrainer
 from src.transformer_net import TransformerNet
 from utils.images_utils import load_image
+from utils.files import write_to_env_file
 
 
 
@@ -28,6 +29,9 @@ if __name__ == "__main__":
     parser.add_argument("--dataset_ratio", type=float, default=1.0, help="Ratio of the dataset to be used for training")
     args = parser.parse_args()
     
+    # Write target_size to the .env file
+    write_to_env_file("TARGET_SIZE", f"({args.image_size}, {args.image_size})")
+    
     
     # Load hyperparameters
     hyperparams = json.load(open(args.hyperparameters_path, "r"))
@@ -37,7 +41,7 @@ if __name__ == "__main__":
 
     # Instantiate the TransformerNet and StyleTransferModel
     transformer_net = TransformerNet()
-    transformer_net.build(input_shape=(None, 256, 256, 3))
+    transformer_net.build(input_shape=(None, args.image_size, args.image_size, 3))
 
     # Initialize the trainer
     trainer = TransformerNetTrainer(transformer_net=transformer_net,
